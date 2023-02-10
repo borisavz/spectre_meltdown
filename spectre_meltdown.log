@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/Arch Linux) (preloaded format=pdflatex 2023.1.25)  10 FEB 2023 13:46
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022/Arch Linux) (preloaded format=pdflatex 2023.1.25)  10 FEB 2023 14:48
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1134,11 +1134,11 @@ Dictionary: translator-theorem-dictionary, Language: English
 ] [6
 
 ]
-<images/mem1.jpg, id=219, 706.64pt x 514.92375pt>
+<images/mem1.jpg, id=223, 706.64pt x 382.42876pt>
 File: images/mem1.jpg Graphic file (type jpg)
 <use images/mem1.jpg>
 Package pdftex.def Info: images/mem1.jpg  used on input line 125.
-(pdftex.def)             Requested size: 273.7986pt x 199.51517pt.
+(pdftex.def)             Requested size: 342.29947pt x 185.25014pt.
  [7
 
 ] [8
@@ -1149,25 +1149,28 @@ Package pdftex.def Info: images/mem1.jpg  used on input line 125.
 
  <./images/mem1.jpg>] [10
 
+
 ] [11
+
+]
+[12
 
 
 ]
-<images/mem2.jpg, id=363, 552.56438pt x 208.52907pt>
+<images/mem2.jpg, id=394, 552.56438pt x 208.52907pt>
 File: images/mem2.jpg Graphic file (type jpg)
 <use images/mem2.jpg>
 Package pdftex.def Info: images/mem2.jpg  used on input line 186.
 (pdftex.def)             Requested size: 342.29126pt x 129.17531pt.
+ [13
 
-[12
-
-] [13
-
-
- <./images/mem2.jpg>] [14
+] [14
 
 
-] [15
+ <./images/mem2.jpg>] [15
+
+
+] [16
 
 ]
 \openout4 = `spectre_meltdown.vrb'.
@@ -1175,7 +1178,30 @@ Package pdftex.def Info: images/mem2.jpg  used on input line 186.
  (./spectre_meltdown.vrb
 (/usr/share/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2020/03/24 1.8d listings language file
-)) [16
+)) [17
+
+] [18
+
+] [19
+
+]
+[20
+
+
+] [21
+
+]
+<images/virtmem.png, id=646, 497.86pt x 786.94pt>
+File: images/virtmem.png Graphic file (type png)
+<use images/virtmem.png>
+Package pdftex.def Info: images/virtmem.png  used on input line 286.
+(pdftex.def)             Requested size: 126.22713pt x 199.52031pt.
+ [22
+
+] [23
+
+
+ <./images/virtmem.png>] [24
 
 ]
 \tf@nav=\write7
@@ -1187,16 +1213,15 @@ File: lstlang1.sty 2020/03/24 1.8d listings language file
 \tf@snm=\write9
 \openout9 = `spectre_meltdown.snm'.
 
-
-(./spectre_meltdown.aux)
+ (./spectre_meltdown.aux)
 Package rerunfilecheck Info: File `spectre_meltdown.out' has not changed.
-(rerunfilecheck)             Checksum: 9E7BEEE5C0372D6BE86C4DD9E1B86C1D;1197.
+(rerunfilecheck)             Checksum: 3A86F6F20B4F3471F7043EA7E8FAE058;1456.
  ) 
 Here is how much of TeX's memory you used:
- 26239 strings out of 478238
- 493031 string characters out of 5850456
- 939557 words of memory out of 5000000
- 43913 multiletter control sequences out of 15000+600000
+ 26288 strings out of 478238
+ 493551 string characters out of 5850456
+ 940161 words of memory out of 5000000
+ 43941 multiletter control sequences out of 15000+600000
  477363 words of font info for 39 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  128i,15n,122p,431b,1297s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1207,10 +1232,10 @@ cm-super/sfss0600.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfss10
 00.pfb></usr/share/texmf-dist/fonts/type1/public/cm-super/sfss1095.pfb></usr/sh
 are/texmf-dist/fonts/type1/public/cm-super/sfss1440.pfb></usr/share/texmf-dist/
 fonts/type1/public/cm-super/sfsx1095.pfb>
-Output written on spectre_meltdown.pdf (16 pages, 534435 bytes).
+Output written on spectre_meltdown.pdf (24 pages, 560771 bytes).
 PDF statistics:
- 546 PDF objects out of 1000 (max. 8388607)
- 491 compressed objects within 5 object streams
- 40 named destinations out of 1000 (max. 500000)
- 141 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 777 PDF objects out of 1000 (max. 8388607)
+ 709 compressed objects within 8 object streams
+ 59 named destinations out of 1000 (max. 500000)
+ 154 words of extra memory for PDF output out of 10000 (max. 10000000)
 

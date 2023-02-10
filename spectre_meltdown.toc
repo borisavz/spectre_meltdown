@@ -1,6 +1,7 @@
 \babel@toc {serbianc}{}\relax 
 \beamer@sectionintoc {1}{Архитектура и микроархитектура}{3}{0}{1}
 \beamer@sectionintoc {2}{Кеширање}{7}{0}{2}
-\beamer@sectionintoc {3}{Предвиђање гранања и прекоредно извршавање}{15}{0}{3}
-\beamer@subsectionintoc {3}{1}{Предвиђање гранања}{15}{0}{3}
-\beamer@subsectionintoc {3}{2}{Прекоредно извршавање}{16}{0}{3}
+\beamer@sectionintoc {3}{Предвиђање гранања и прекоредно извршавање}{16}{0}{3}
+\beamer@subsectionintoc {3}{1}{Предвиђање гранања}{16}{0}{3}
+\beamer@subsectionintoc {3}{2}{Прекоредно извршавање}{17}{0}{3}
+\beamer@sectionintoc {4}{Основни механизми изолације}{18}{0}{4}

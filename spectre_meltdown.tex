@@ -227,5 +227,76 @@ a = a1 + a2;
             \end{itemize}
         \end{itemize}
     \end{frame}
+    
+    \section{Основни механизми изолације}
+    
+    \begin{frame}{Индирекција}
+        \begin{itemize}
+            \item Било који проблем у рачунарству може бити решен још једним нивоом индирекције, осим наравно проблема превише индирекција (David J. Wheeler)
+            \item Индирекција омогућава имплементацију контроле приступа
+            \item Извршавање \textbf{акције} мора да одобри \textbf{посредник} који дефинише правила приступа
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}[allowframebreaks]{Контрола приступа у хардверу}
+        \begin{itemize}
+            \item Основне градивне блокове је неопходно имплементирати у хардверу
+            \begin{itemize}
+                \item софтвер можда неће бити рад да сарађује!
+            \end{itemize}
+            \item Додатне контроле се имплементирају у кернелу
+        \end{itemize}
+        
+        \framebreak
+        
+        \begin{figure}
+            \centering
+            %\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{images/udp_enc.png}
+            \label{fig:ind}
+        \end{figure}
+    \end{frame}
+    
+    \begin{frame}{Режими рада процесора}
+        \begin{itemize}
+            \item Привилеговани: IO, меморијске табеле, табеле прекида
+            \begin{itemize}
+                \item кернел
+            \end{itemize}
+            \item Неривилеговани: аритметичко/логичке операције, условно гранање, ограничен приступ меморији, системски позив
+            \begin{itemize}
+                \item кориснички софтвер
+            \end{itemize}
+            \item Прелазак из непривилегованог у привилеговани режим је могућ приликом прекида или системског позива
+            \item Кернел одбија захтев уколико кориснички процес нема потребне привилегије и убија га
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}[allowframebreaks]{Виртуелни адресни простор}
+        \begin{itemize}
+            \item
+        \end{itemize}
+        
+        \framebreak
+        
+        \begin{figure}
+            \centering
+            \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{images/virtmem.png}
+            \label{fig:virtmem}
+        \end{figure}
+    \end{frame}
+    
+    \begin{frame}{Покретање оперативног система}
+        \begin{itemize}
+            \item Процесор се буди у привилегованом режиму
+            \item Учитава се кернел
+            \item Иницијализују се табеле прекида
+            \item Иницијализују се меморијске табеле
+            \item Контрола се предаје корисничким програмима, прелази се у непривилегован режим
+            \item Овако подешен посредник више није могуће уклонити или заобићи
+            \begin{itemize}
+                \item ...под претпоставком да нема багова у имплементацији кернела и имплементацији хардвера
+            \end{itemize}
+        \end{itemize}
+    \end{frame}
 
 \end{document}
