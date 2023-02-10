@@ -1,10 +1,11 @@
-\documentclass{beamer}
+\documentclass[xcolor=table]{beamer}
 
 \usepackage[serbianc]{babel}
 \usepackage{graphicx}
 \usepackage{makeidx}
 \usepackage{listings}
 \usepackage{adjustbox}
+%\usepackage[table,xcdraw]{xcolor}
 
 \hypersetup{unicode}
 \makeindex
@@ -119,7 +120,7 @@
 
         \begin{figure}
             \centering
-            \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{images/mem1.jpg}
+            \includegraphics[width=\textwidth,height=0.7\textheight,keepaspectratio]{images/mem1.jpg}
             \label{fig:mem1}
         \end{figure}
     \end{frame}
@@ -240,19 +241,28 @@ a = a1 + a2;
     
     \begin{frame}[allowframebreaks]{Контрола приступа у хардверу}
         \begin{itemize}
+            \item Рачунар без контроле приступа би донекле био употребљив у једнокорисничком окружењу
+            \begin{itemize}
+                \item ...али неупотребљив у вишекорисничком
+                \item чак и у једнокорисничком окружењу, одсуство изолације процеса представља велику опасност
+            \end{itemize}
             \item Основне градивне блокове је неопходно имплементирати у хардверу
             \begin{itemize}
                 \item софтвер можда неће бити рад да сарађује!
             \end{itemize}
+            \item Кључни механизми: режими рада процесора, виртуелна меморија
             \item Додатне контроле се имплементирају у кернелу
+            \begin{itemize}
+                \item пријављивање корисника на систем, пермисије за приступ фајловима
+            \end{itemize}
         \end{itemize}
         
         \framebreak
         
         \begin{figure}
             \centering
-            %\includegraphics[width=\textwidth,height=\textheight,keepaspectratio]{images/udp_enc.png}
-            \label{fig:ind}
+            \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{images/unix_architecture.jpg}
+            \label{fig:unix_architecture.jpg}
         \end{figure}
     \end{frame}
     
@@ -271,7 +281,7 @@ a = a1 + a2;
         \end{itemize}
     \end{frame}
     
-    \begin{frame}[allowframebreaks]{Виртуелни адресни простор}
+    \begin{frame}[allowframebreaks]{Виртуелна меморија}
         \begin{itemize}
             \item
         \end{itemize}
@@ -294,8 +304,72 @@ a = a1 + a2;
             \item Контрола се предаје корисничким програмима, прелази се у непривилегован режим
             \item Овако подешен посредник више није могуће уклонити или заобићи
             \begin{itemize}
-                \item ...под претпоставком да нема багова у имплементацији кернела и имплементацији хардвера
+                \item ...под претпоставком да нема багова у имплементацији кернела и хардвера
             \end{itemize}
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}[allowframebreaks]{Употреба кеша као side-channel}
+        \begin{itemize}
+            \item До сада смо причали о механизмима који нам омогућавају безбедно дељење рачунара и побољшање перформанси секвенцијалног модела
+            \item Безбедност и перформасе су често супротни захтеви у дизајну!
+            \item Заједничко за оба напада је да извршавају недозвољен меморијски приступ \textbf{спекулативно}
+            \begin{itemize}
+                \item пошто је извршавање \textbf{спекулативно}, процесор ефекте чува/одбацује накнадно
+                \item комплетно одбацивање резултата није могуће
+                \item стање ISA се успешно поништава, али остаје видљиво стање микроархитектуре (вредности у кешу!)
+            \end{itemize}
+            \item Добијену вредност кодирају као довлачење линије у кеш
+            \item Добијену вредност декодирају као проверу присуства линије у кешу
+        \end{itemize}
+        
+        \framebreak
+        
+        \begin{itemize}
+            \item Директан недозвољен приступ није могућ
+            \item Проблем настаје код спекулативног извршавања, јер процесор не зна да ли да баци грешку
+            \item Приступ вредности учитане у кеш је видно брже од вредности из радне меморије
+            \item Алгоритам:
+            \begin{itemize}
+                \item алоцирамо низ
+                \item изазивамо недозвољен приступ меморији
+                \item приступамо елементу низа чији индекс одговара тајној вредности
+                \item итерирамо кроз низ и меримо време потребно за приступ индексима
+                \item уклањамо цео низ из кеша и приступамо наредној недозвољеној адреси
+            \end{itemize}
+        \end{itemize}
+        
+        \framebreak
+        
+        \begin{table}[]
+            \begin{tabular}{|l|l|l|}
+                \hline
+                елемент                             & кодирана вредност        & време приступа                \\ \hline
+                \rowcolor[HTML]{FD6864} 
+                a{[}x * 0{]}                        & 0                        & 300 ns                        \\ \hline
+                \rowcolor[HTML]{FD6864}
+                a{[}x * 1{]}                        & 1                        & 300 ns                        \\ \hline
+                \rowcolor[HTML]{67FD9A} 
+                a{[}x * 2{]}                        & 2                        & 5 ns                          \\ \hline
+                \rowcolor[HTML]{FD6864}
+                a{[}x * 3{]}                        & 3                        & 300 ns                        \\ \hline
+                ...                                 & ...                      & ...                           \\ \hline
+                \rowcolor[HTML]{FD6864}
+                a{[}x * 254{]}                      & 254                      & 300 ns                        \\ \hline
+            \end{tabular}
+        \end{table}
+        
+        Скалирање за вредност \textbf{x} је неопхондно јер би у супротном једна линија кеша представљала 16 вредности, јер је \textbf{int} ширине 32 бита,
+        а величина линије кеша је углавном 64 бајта 
+    \end{frame}
+    
+    \begin{frame}{Литература}
+        \begin{itemize}
+            \item Spectre Attacks: Exploiting Speculative Execution
+            \item Meltdown: Reading Kernel Memory from User Space
+            \item Computer Organization and Design: The Hardware/Software Interface, David A. Patterson \& John L. Hennessy
+            \item Системски софтвер (презентације), Иван Нејгебауер
+            \item Operating Systems: Internals and Design Principles, William Stallings
         \end{itemize}
     \end{frame}
 
