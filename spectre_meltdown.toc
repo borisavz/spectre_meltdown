@@ -5,3 +5,6 @@
 \beamer@subsectionintoc {3}{1}{Предвиђање гранања}{15}{0}{3}
 \beamer@subsectionintoc {3}{2}{Прекоредно извршавање}{16}{0}{3}
 \beamer@sectionintoc {4}{Основни механизми изолације}{17}{0}{4}
+\beamer@sectionintoc {5}{Напади}{27}{0}{5}
+\beamer@subsectionintoc {5}{1}{Spectre}{27}{0}{5}
+\beamer@sectionintoc {6}{Литература}{35}{0}{6}
