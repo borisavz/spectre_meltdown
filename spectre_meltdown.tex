@@ -7,6 +7,10 @@
 \usepackage{adjustbox}
 %\usepackage[table,xcdraw]{xcolor}
 
+\lstset{
+    escapechar={|},
+}
+
 \hypersetup{unicode}
 \makeindex
 \usefonttheme{professionalfonts}
@@ -362,6 +366,108 @@ a = a1 + a2;
         а величина линије кеша је углавном 64 бајта 
     \end{frame}
     
+    \begin{frame}{Spectre: увод}
+        \begin{itemize}
+            \item Мета напада: кориснички део меморије активног процеса
+            \item Због чега ово представља проблем?
+            \begin{itemize}
+                \item процес би требало да види своју корисничку меморију
+            \end{itemize}
+            \item Проблем: Web/JavaScript
+            \begin{itemize}
+                \item све скрипте се извршавају у оквиру истог процеса
+                \item у оквиру истог адресног простора се налазе тајне вредности различитих веб апликација
+                \item интерпретер онемогућава недозвољен приступ
+                \item ...али нема начин да спречи спекулативно извршавање
+            \end{itemize}
+        \end{itemize}
+    \end{frame}
+        
+    \begin{frame}[allowframebreaks,fragile,t]{Spectre: напад}
+    
+    
+        \begin{lstlisting}[language=java,frame=single]
+if(x < arr_size) {
+    y = side_chan_arr[arr[x] * 4096];
+}
+        \end{lstlisting}
+        
+        \textbf{x}: вредност коју бира нападач
+        
+        \textbf{y}: додела вредности која се успешно одбацује
+        
+        \textbf{arr}: помоћни низ који користимо како би приступили недозвољеној адреси
+        
+        \textbf{side\_chan\_arr}: низ који користимо као side-channel. присуство елемента низа у кешу се не одбацује!
+        
+        \framebreak
+        \begin{lstlisting}[language=java,frame=single]
+if(|\color{green}x| < arr_size) {
+    y = side_chan_arr[arr[|\color{green}x|] * 4096];
+}
+        \end{lstlisting}
+        
+        Напад почињемо тако што прво као \textbf{x} бирамо валидну вредност (x < arr\_size).
+        Овиме \textit{убеђујемо} предиктор гранања да је грану углавном потребно извршити.
+        
+        \framebreak
+        \begin{lstlisting}[language=java,frame=single]
+if(|\color{red}x| < arr_size) {
+    y = side_chan_arr[arr[|\color{red}x|] * 4096];
+}
+        \end{lstlisting}
+        
+        Потом, бирамо вредност \textbf{x} која излази из граница низа.
+        Добијена адреса представља потенцијално скривену вредност из адресног простора нашег процеса.
+        
+        \framebreak
+        \begin{lstlisting}[language=java,frame=single]
+if(|\color{red}x| < arr_size) {
+    y = |\color{green}side\_chan\_arr[||\color{red}arr[x]| * 4096|\color{green}]|;
+}
+        \end{lstlisting}
+        
+        Уколико је предиктор гранања одлучио да изврши грану, долази до приступа елементу из \textbf{side\_chan\_arr} који одговара добијеној вредности.
+        \\~\\
+        Ово изазива довлачење дела низа \textbf{side\_chan\_arr} у кеш.
+        
+        \framebreak
+        \begin{lstlisting}[language=java,frame=single]
+if(x < arr_size) {
+    |\color{red}y| = |\color{green}side\_chan\_arr[|arr[x] * 4096|\color{green}]|;
+}
+        \end{lstlisting}
+        
+        Процесор накнадно закључује да извршавање гране није требало да се деси јер се \textbf{x < arr\_size} евалуира у \textbf{false}.
+        \\~\\
+        Додела вредности променљивој \textbf{y} се успешно одбацује.
+        \\~\\
+        Стање кеша се не одбацује! Линија је добављена и њено присуство је могуће проверити.
+        
+        \framebreak
+        \begin{lstlisting}[language=java,frame=single]
+for(i = 0; i < pow(2, 32); i++) {
+    t1 = time();
+    y = side_chan_arr[i * 4096];
+    t2 = time();
+    
+    elapsed = t2 - t1;
+    
+    if(elapsed < 5) {
+        println("Stolen value: ", i);
+    }
+}
+        \end{lstlisting}
+        
+        \framebreak
+        
+        Итерирамо кроз \textbf{side\_chan\_arr} и меримо време потребно за приступ елементима низа.
+        \\~\\
+        Уколико је елемент присутан у кешу, успешно смо преко side-channel пренели вредност.
+        \\~\\
+        Приказани алгоритам је упрошћен јер не узима у обзир случајеве у којима више елемената пронлазаимо у кешу, или не проналазимо ниједан.
+    \end{frame}
+    
     \begin{frame}{Литература}
         \begin{itemize}
             \item Spectre Attacks: Exploiting Speculative Execution
@@ -369,6 +475,7 @@ a = a1 + a2;
             \item Computer Organization and Design: The Hardware/Software Interface, David A. Patterson \& John L. Hennessy
             \item Системски софтвер (презентације), Иван Нејгебауер
             \item Operating Systems: Internals and Design Principles, William Stallings
+            \item Preliminary Discussion of the Logical Design of an Electronic Computing Instrument
         \end{itemize}
     \end{frame}
 

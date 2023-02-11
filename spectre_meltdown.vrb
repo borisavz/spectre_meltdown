@@ -1,19 +1,83 @@
-\frametitle{Прекоредно извршавање}
-\begin{itemize}
-            \item{
-                \begin{lstlisting}[language=java]
-a1 = b1 + c1;
-a2 = b2 + c2;
-a = a1 + a2;
-                \end{lstlisting}
-            }
+\frametitle{Spectre: напад}
 
-            \item Шта ако су вредности \textbf{b2} и \textbf{c2} у кешу, а потребно је прво сачекати добављање \textbf{b1} и \textbf{c1}?
-            \item У секвенцијалном моделу извршавања, процесор би био заустављен
-            \item Идеја:
-            \begin{itemize}
-                \item на нивоу ISA задржавамо секвенцијални модел извршавања
-                \item на нивоу микроархитектуре инструкције извршавамо у редоследу који зависи од доступних података
-                \item резултат програма мора остати исти!
-            \end{itemize}
-        \end{itemize}
+
+        \begin{lstlisting}[language=java,frame=single]
+if(x < arr_size) {
+    y = side_chan_arr[arr[x] * 4096];
+}
+        \end{lstlisting}
+
+        \textbf{x}: вредност коју бира нападач
+
+        \textbf{y}: додела вредности која се успешно одбацује
+
+        \textbf{arr}: помоћни низ који користимо како би приступили недозвољеној адреси
+
+        \textbf{side\_chan\_arr}: низ који користимо као side-channel. присуство елемента низа у кешу се не одбацује!
+
+        \framebreak
+        \begin{lstlisting}[language=java,frame=single]
+if(|\color{green}x| < arr_size) {
+    y = side_chan_arr[arr[|\color{green}x|] * 4096];
+}
+        \end{lstlisting}
+
+        Напад почињемо тако што прво као \textbf{x} бирамо валидну вредност (x < arr\_size).
+        Овиме \textit{убеђујемо} предиктор гранања да је грану углавном потребно извршити.
+
+        \framebreak
+        \begin{lstlisting}[language=java,frame=single]
+if(|\color{red}x| < arr_size) {
+    y = side_chan_arr[arr[|\color{red}x|] * 4096];
+}
+        \end{lstlisting}
+
+        Потом, бирамо вредност \textbf{x} која излази из граница низа.
+        Добијена адреса представља потенцијално скривену вредност из адресног простора нашег процеса.
+
+        \framebreak
+        \begin{lstlisting}[language=java,frame=single]
+if(|\color{red}x| < arr_size) {
+    y = |\color{green}side\_chan\_arr[||\color{red}arr[x]| * 4096|\color{green}]|;
+}
+        \end{lstlisting}
+
+        Уколико је предиктор гранања одлучио да изврши грану, долази до приступа елементу из \textbf{side\_chan\_arr} који одговара добијеној вредности.
+        \\~\\
+        Ово изазива довлачење дела низа \textbf{side\_chan\_arr} у кеш.
+
+        \framebreak
+        \begin{lstlisting}[language=java,frame=single]
+if(x < arr_size) {
+    |\color{red}y| = |\color{green}side\_chan\_arr[|arr[x] * 4096|\color{green}]|;
+}
+        \end{lstlisting}
+
+        Процесор накнадно закључује да извршавање гране није требало да се деси јер се \textbf{x < arr\_size} евалуира у \textbf{false}.
+        \\~\\
+        Додела вредности променљивој \textbf{y} се успешно одбацује.
+        \\~\\
+        Стање кеша се не одбацује! Линија је добављена и њено присуство је могуће проверити.
+
+        \framebreak
+        \begin{lstlisting}[language=java,frame=single]
+for(i = 0; i < pow(2, 32); i++) {
+    t1 = time();
+    y = side_chan_arr[i * 4096];
+    t2 = time();
+
+    elapsed = t2 - t1;
+
+    if(elapsed < 5) {
+        println("Stolen value: ", i);
+    }
+}
+        \end{lstlisting}
+
+        \framebreak
+
+        Итерирамо кроз \textbf{side\_chan\_arr} и меримо време потребно за приступ елементима низа.
+        \\~\\
+        Уколико је елемент присутан у кешу, успешно смо преко side-channel пренели вредност.
+        \\~\\
+        Приказани алгоритам је упрошћен јер не узима у обзир случајеве у којима више елемената пронлазаимо у кешу, или не проналазимо ниједан.
