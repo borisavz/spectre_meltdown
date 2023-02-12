@@ -1,83 +1,55 @@
-\frametitle{Spectre: напад}
-
-
-        \begin{lstlisting}[language=java,frame=single]
-if(x < arr_size) {
-    y = side_chan_arr[arr[x] * 4096];
-}
+\frametitle{Meltdown: напад}
+\begin{lstlisting}[language={[x86masm]Assembler},frame=single]
+; rcx = kernel address, rbx = probe array
+    xor rax, rax
+retry:
+    mov al, byte [rcx]
+    shl rax, 0xc
+jz retry
+    mov rbx, qword [rbx + rax]
         \end{lstlisting}
 
-        \textbf{x}: вредност коју бира нападач
+        У раду је представљена имплементација у асемблеру.
+        \\~\\
+        Ради лакшег разумевања, ми ћемо представити имплементацију у C.
+
+        \framebreak
+        \begin{lstlisting}[language=c,frame=single]
+kernel_addr = 0x1234;
+stolen_val = *kernel_addr;
+y = side_chan_arr[stolen_val * 4096];
+        \end{lstlisting}
+
+        \textbf{kernel\_addr}: кернелска адреса коју бира нападач
+
+        \textbf{stolen\_val}: вредност ускладиштена на кернелској адреси
 
         \textbf{y}: додела вредности која се успешно одбацује
-
-        \textbf{arr}: помоћни низ који користимо како би приступили недозвољеној адреси
 
         \textbf{side\_chan\_arr}: низ који користимо као side-channel. присуство елемента низа у кешу се не одбацује!
 
         \framebreak
-        \begin{lstlisting}[language=java,frame=single]
-if(|\color{green}x| < arr_size) {
-    y = side_chan_arr[arr[|\color{green}x|] * 4096];
-}
+        \begin{lstlisting}[language=c,frame=single]
+|\color{red}kernel\_addr| = 0x1234;
+|\color{red}stolen\_val| = *|\color{red}kernel\_addr|;
+y = side_chan_arr[stolen_val * 4096];
         \end{lstlisting}
 
-        Напад почињемо тако што прво као \textbf{x} бирамо валидну вредност (x < arr\_size).
-        Овиме \textit{убеђујемо} предиктор гранања да је грану углавном потребно извршити.
-
-        \framebreak
-        \begin{lstlisting}[language=java,frame=single]
-if(|\color{red}x| < arr_size) {
-    y = side_chan_arr[arr[|\color{red}x|] * 4096];
-}
-        \end{lstlisting}
-
-        Потом, бирамо вредност \textbf{x} која излази из граница низа.
-        Добијена адреса представља потенцијално скривену вредност из адресног простора нашег процеса.
-
-        \framebreak
-        \begin{lstlisting}[language=java,frame=single]
-if(|\color{red}x| < arr_size) {
-    y = |\color{green}side\_chan\_arr[||\color{red}arr[x]| * 4096|\color{green}]|;
-}
-        \end{lstlisting}
-
-        Уколико је предиктор гранања одлучио да изврши грану, долази до приступа елементу из \textbf{side\_chan\_arr} који одговара добијеној вредности.
+        Страница којој адреса припада је означена као кернелска. Уколико се код извршава спекулативно, процесор накнадно пријављује грешку.
         \\~\\
-        Ово изазива довлачење дела низа \textbf{side\_chan\_arr} у кеш.
+        Временски опсег од недозвољног приступа до пријављивања грешке није велики, али је извођење напада и даље могуће.
 
         \framebreak
-        \begin{lstlisting}[language=java,frame=single]
-if(x < arr_size) {
-    |\color{red}y| = |\color{green}side\_chan\_arr[|arr[x] * 4096|\color{green}]|;
-}
+        \begin{lstlisting}[language=c,frame=single]
+kernel_addr = 0x1234;
+|\color{red}stolen\_val| = *kernel_addr;
+y = |\color{green}side\_chan\_arr[||\color{red}stolen\_val| * 4096|\color{green}]|;
         \end{lstlisting}
 
-        Процесор накнадно закључује да извршавање гране није требало да се деси јер се \textbf{x < arr\_size} евалуира у \textbf{false}.
+        Уколико се код извршава спекулативно, приступ се десио и учитана је вредност са кернелске адресе.
+        \\~\\
+        Долази до приступа елементу из \textbf{side\_chan\_arr} коjи одговара добиjеноj вредности.
         \\~\\
         Додела вредности променљивој \textbf{y} се успешно одбацује.
         \\~\\
         Стање кеша се не одбацује! Линија је добављена и њено присуство је могуће проверити.
-
-        \framebreak
-        \begin{lstlisting}[language=java,frame=single]
-for(i = 0; i < pow(2, 32); i++) {
-    t1 = time();
-    y = side_chan_arr[i * 4096];
-    t2 = time();
-
-    elapsed = t2 - t1;
-
-    if(elapsed < 5) {
-        println("Stolen value: ", i);
-    }
-}
-        \end{lstlisting}
-
-        \framebreak
-
-        Итерирамо кроз \textbf{side\_chan\_arr} и меримо време потребно за приступ елементима низа.
-        \\~\\
-        Уколико је елемент присутан у кешу, успешно смо преко side-channel пренели вредност.
-        \\~\\
-        Приказани алгоритам је упрошћен јер не узима у обзир случајеве у којима више елемената пронлазаимо у кешу, или не проналазимо ниједан.

@@ -255,19 +255,7 @@ a = a1 + a2;
                 \item софтвер можда неће бити рад да сарађује!
             \end{itemize}
             \item Кључни механизми: режими рада процесора, виртуелна меморија
-            \item Додатне контроле се имплементирају у кернелу
-            \begin{itemize}
-                \item пријављивање корисника на систем, пермисије за приступ фајловима
-            \end{itemize}
         \end{itemize}
-        
-        \framebreak
-        
-        \begin{figure}
-            \centering
-            \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{images/unix_architecture.jpg}
-            \label{fig:unix_architecture.jpg}
-        \end{figure}
     \end{frame}
     
     \begin{frame}{Режими рада процесора}
@@ -287,7 +275,18 @@ a = a1 + a2;
     
     \begin{frame}[allowframebreaks]{Виртуелна меморија}
         \begin{itemize}
-            \item
+            \item Додељивање виртуелног адресног простора сваком процесу омогућава:
+            \begin{itemize}
+                \item \textbf{изолацију процеса}
+                \item употребу већег капацитета радне меморије од доступног
+                \item дељење заједничког кода код динамички везаних програма
+            \end{itemize}
+            \item Меморија се дели на странице
+            \begin{itemize}
+                \item више процеса могу да деле исту физичку страницу
+                \item права приступа је могуће подесити на нивоу странице
+            \end{itemize}
+            \item Недозвољен приступ изазива \textbf{segmentation fault}
         \end{itemize}
         
         \framebreak
@@ -299,7 +298,7 @@ a = a1 + a2;
         \end{figure}
     \end{frame}
     
-    \begin{frame}{Покретање оперативног система}
+    \begin{frame}[allowframebreaks]{Покретање оперативног система}
         \begin{itemize}
             \item Процесор се буди у привилегованом режиму
             \item Учитава се кернел
@@ -311,34 +310,46 @@ a = a1 + a2;
                 \item ...под претпоставком да нема багова у имплементацији кернела и хардвера
             \end{itemize}
         \end{itemize}
+        
+        \framebreak
+        
+        \begin{figure}
+            \centering
+            \includegraphics[width=\textwidth,height=0.8\textheight,keepaspectratio]{images/unix_architecture.jpg}
+            \label{fig:unix_architecture.jpg}
+        \end{figure}
     \end{frame}
     
-    \begin{frame}[allowframebreaks]{Употреба кеша као side-channel}
+    \section{Употреба кеша као side-channel}
+    
+    \begin{frame}{Употреба кеша као side-channel}
         \begin{itemize}
             \item До сада смо причали о механизмима који нам омогућавају безбедно дељење рачунара и побољшање перформанси секвенцијалног модела
             \item Безбедност и перформасе су често супротни захтеви у дизајну!
+            \item Приступ вредности учитаној у кеш је видно брже од вредности из радне меморије
             \item Заједничко за оба напада је да извршавају недозвољен меморијски приступ \textbf{спекулативно}
             \begin{itemize}
                 \item пошто је извршавање \textbf{спекулативно}, процесор ефекте чува/одбацује накнадно
                 \item комплетно одбацивање резултата није могуће
                 \item стање ISA се успешно поништава, али остаје видљиво стање микроархитектуре (вредности у кешу!)
             \end{itemize}
-            %\item Добијену вредност кодирају као довлачење линије у кеш
-            %\item Добијену вредност декодирају као проверу присуства линије у кешу
         \end{itemize}
+    \end{frame}
         
-        \framebreak
-        
+    \begin{frame}[allowframebreaks,fragile]{Flush/Evict + Time}
         \begin{itemize}
-            \item Kод спекулативног извршавања процесор не зна да ли да баци грешку за недозвољен меморијски приступ
-            \item Приступ вредности учитаној у кеш је видно брже од вредности из радне меморије
-            \item Алгоритам:
+            \item Алоцирамо низ
+            \item Изазивамо недозвољен приступ меморији
+            \item Приступамо елементу низа чији индекс одговара тајној вредности
+            \item Итерирамо кроз низ и меримо време потребно за приступ елементима
             \begin{itemize}
-                \item алоцирамо низ
-                \item изазивамо недозвољен приступ меморији
-                \item приступамо елементу низа чији индекс одговара тајној вредности
-                \item итерирамо кроз низ и меримо време потребно за приступ индексима
-                \item уклањамо цео низ из кеша и приступамо наредној недозвољеној адреси
+                \item уколико је приступ брз, вредност је кеширана
+                \item успешно смо пренели тајну вредност
+            \end{itemize}
+            \item Уклањамо цео низ из кеша и приступамо наредној недозвољеној адреси
+            \begin{itemize}
+                \item Flush+Time: низ уклањамо из кеша инструкцијом CLFLUSH
+                \item Evict+Time: низ уклањамо из кеша циљаним меморијским приступима
             \end{itemize}
         \end{itemize}
         
@@ -363,7 +374,25 @@ a = a1 + a2;
         \end{table}
         
         Скалирање за вредност \textbf{x} је неопхондно јер би у супротном једна линија кеша представљала 16 вредности, јер је \textbf{int} ширине 32 бита,
-        а величина линије кеша је углавном 64 бајта 
+        а величина линије кеша је углавном 64 бајта
+        
+        \framebreak
+        
+        \begin{lstlisting}[language=java,frame=single]
+for(i = 0; i < pow(2, 32); i++) {
+    t1 = time();
+    y = side_chan_arr[i * 4096];
+    t2 = time();
+    
+    elapsed = t2 - t1;
+    
+    if(elapsed < CACHE_ACCESS_TRESHOLD) {
+        println("Stolen value: ", i);
+    }
+}
+        \end{lstlisting}
+        
+        Приказ измплементације у програмском коду 
     \end{frame}
     
     \section{Напади}
@@ -387,8 +416,6 @@ a = a1 + a2;
     \end{frame}
         
     \begin{frame}[allowframebreaks,fragile,t]{Spectre: напад}
-    
-    
         \begin{lstlisting}[language=java,frame=single]
 if(x < arr_size) {
     y = side_chan_arr[arr[x] * 4096];
@@ -446,29 +473,82 @@ if(x < arr_size) {
         Додела вредности променљивој \textbf{y} се успешно одбацује.
         \\~\\
         Стање кеша се не одбацује! Линија је добављена и њено присуство је могуће проверити.
-        
-        \framebreak
-        \begin{lstlisting}[language=java,frame=single]
-for(i = 0; i < pow(2, 32); i++) {
-    t1 = time();
-    y = side_chan_arr[i * 4096];
-    t2 = time();
+    \end{frame}
     
-    elapsed = t2 - t1;
+    \subsection{Meltdown}
     
-    if(elapsed < 5) {
-        println("Stolen value: ", i);
-    }
-}
+    \begin{frame}{Meltdown: увод}
+        \begin{itemize}
+            \item Мета напада: кернелски део меморије активног процеса
+            \item Због чега ово представља проблем?
+            \begin{itemize}
+                \item кернелски део меморије садржи криптографске кључеве и остале тајне вредности сакривене од корисничког процеса
+                \item тајне вредности је могуће употребити за стицање већих привилегија
+            \end{itemize}
+            \item Представља баг у Intel имплементацији
+            \begin{itemize}
+                \item при спекулативном извршавању нема провере права приступа меморијској локацији
+                \item процесор пријављује грешку тек по покушају чувања резултата
+                \item AMD и ARM нису подложни овом нападу
+            \end{itemize}
+        \end{itemize}
+    \end{frame}
+    
+    \begin{frame}[allowframebreaks,fragile,t]{Meltdown: напад}
+        \begin{lstlisting}[language={[x86masm]Assembler},frame=single]
+; rcx = kernel address, rbx = probe array
+    xor rax, rax
+retry:
+    mov al, byte [rcx]
+    shl rax, 0xc
+jz retry
+    mov rbx, qword [rbx + rax]
         \end{lstlisting}
         
-        \framebreak
+        У раду је представљена имплементација у асемблеру.
+        \\~\\
+        Ради лакшег разумевања, ми ћемо представити имплементацију у C.
         
-        Итерирамо кроз \textbf{side\_chan\_arr} и меримо време потребно за приступ елементима низа.
+        \framebreak
+        \begin{lstlisting}[language=c,frame=single]
+kernel_addr = 0x1234;
+stolen_val = *kernel_addr;
+y = side_chan_arr[stolen_val * 4096];
+        \end{lstlisting}
+        
+        \textbf{kernel\_addr}: кернелска адреса коју бира нападач
+        
+        \textbf{stolen\_val}: вредност ускладиштена на кернелској адреси
+        
+        \textbf{y}: додела вредности која се успешно одбацује
+        
+        \textbf{side\_chan\_arr}: низ који користимо као side-channel. присуство елемента низа у кешу се не одбацује!
+        
+        \framebreak
+        \begin{lstlisting}[language=c,frame=single]
+|\color{red}kernel\_addr| = 0x1234;
+|\color{red}stolen\_val| = *|\color{red}kernel\_addr|;
+y = side_chan_arr[stolen_val * 4096];
+        \end{lstlisting}
+        
+        Страница којој адреса припада је означена као кернелска. Уколико се код извршава спекулативно, процесор накнадно пријављује грешку.
         \\~\\
-        Уколико је елемент присутан у кешу, успешно смо преко side-channel пренели вредност.
+        Временски опсег од недозвољног приступа до пријављивања грешке није велики, али је извођење напада и даље могуће.
+        
+        \framebreak
+        \begin{lstlisting}[language=c,frame=single]
+kernel_addr = 0x1234;
+|\color{red}stolen\_val| = *kernel_addr;
+y = |\color{green}side\_chan\_arr[||\color{red}stolen\_val| * 4096|\color{green}]|;
+        \end{lstlisting}
+        
+        Уколико се код извршава спекулативно, приступ се десио и учитана је вредност са кернелске адресе.
         \\~\\
-        Приказани алгоритам је упрошћен јер не узима у обзир случајеве у којима више елемената пронлазаимо у кешу, или не проналазимо ниједан.
+        Долази до приступа елементу из \textbf{side\_chan\_arr} коjи одговара добиjеноj вредности.
+        \\~\\
+        Додела вредности променљивој \textbf{y} се успешно одбацује.
+        \\~\\
+        Стање кеша се не одбацује! Линија је добављена и њено присуство је могуће проверити.
     \end{frame}
     
     \section{Литература}
@@ -479,6 +559,7 @@ for(i = 0; i < pow(2, 32); i++) {
             \item Meltdown: Reading Kernel Memory from User Space
             \item Computer Organization and Design: The Hardware/Software Interface, David A. Patterson \& John L. Hennessy
             \item Системски софтвер (презентације), Иван Нејгебауер
+            \item Напади на модерне процесоре (презентацијa), Иван Нејгебауер
             \item Operating Systems: Internals and Design Principles, William Stallings
             \item Preliminary Discussion of the Logical Design of an Electronic Computing Instrument
         \end{itemize}
